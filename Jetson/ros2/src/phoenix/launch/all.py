@@ -1,8 +1,9 @@
 from launch import LaunchDescription
 from launch_ros.actions import Node
 import socket
+import re
 
-hostname = socket.gethostname()
+hostname = re.sub('-|/', '_', socket.gethostname())
 
 def generate_launch_description():
     return LaunchDescription([
