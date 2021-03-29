@@ -1,10 +1,11 @@
 ﻿#include "gamepad_thread.hpp"
-#include <Windows.h>
-#include <Xinput.h>
+// #include <Windows.h>
+// #include <Xinput.h>
 #include <string.h>
 #undef min
 #undef max
 #include <algorithm>
+#include <cmath>
 
 #pragma comment(lib, "xinput.lib")
 
@@ -29,6 +30,7 @@ void GamepadThread::vibrate(int deviceId, float power) {
 }
 
 void GamepadThread::run(void) {
+  /*
     while (!isInterruptionRequested()) {
         for (int index = 0; index < MAX_DEVICE_COUNT; index++) {
             XINPUT_STATE state;
@@ -77,6 +79,7 @@ void GamepadThread::run(void) {
         }
         msleep(10);
     }
+    */
 }
 
 void GamepadThread::applyTriggerDeadZone(float &value, float dead_zone) {
@@ -88,7 +91,7 @@ void GamepadThread::applyTriggerDeadZone(float &value, float dead_zone) {
 }
 
 void GamepadThread::applyStickDeadZone(float &x_value, float &y_value, float dead_zone) {
-    float mag = sqrtf(x_value * x_value + y_value * y_value);
+    float mag = std::sqrt(x_value * x_value + y_value * y_value);
     if (mag < dead_zone) {
         x_value = 0.0f;
         y_value = 0.0f;

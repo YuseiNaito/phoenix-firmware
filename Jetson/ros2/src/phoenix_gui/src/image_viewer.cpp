@@ -5,6 +5,8 @@
 #include <QtGui/QOpenGLPixelTransferOptions>
 #include <sensor_msgs/image_encodings.hpp>
 #include <QtCore/QDebug>
+#include <cmath>
+
 ImageViewerWidget::ImageViewerWidget(QWidget *parent)
     : QOpenGLWidget(parent), QOpenGLFunctions() {
     m_PixelTransferOptions = new QOpenGLPixelTransferOptions();
@@ -41,7 +43,7 @@ QSize ImageViewerWidget::optimumImageSize(int original_width, int original_heigh
         optimum_width = width();
         optimum_height = ratio_widget / ratio_image * height();
     }
-    return QSize(static_cast<int>(round(optimum_width)), static_cast<int>(round(optimum_height)));
+    return QSize(static_cast<int>(std::round(optimum_width)), static_cast<int>(std::round(optimum_height)));
 }
 
 void ImageViewerWidget::initializeGL(void) {
@@ -205,7 +207,7 @@ QPoint ImageViewerWidget::toImagePosition(QMouseEvent *event) {
         normalized_width = 1.0;
         normalized_height = ratio_widget / ratio_image;
     }
-    int image_x = static_cast<int>(round(((widget_x - 0.5) / normalized_width + 0.5) * image_width));
-    int image_y = static_cast<int>(round(((widget_y - 0.5) / normalized_height + 0.5) * image_height));
+    int image_x = static_cast<int>(std::round(((widget_x - 0.5) / normalized_width + 0.5) * image_width));
+    int image_y = static_cast<int>(std::round(((widget_y - 0.5) / normalized_height + 0.5) * image_height));
     return QPoint(image_x, image_y);
 }

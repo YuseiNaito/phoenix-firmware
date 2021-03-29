@@ -14,6 +14,11 @@
 #include "format_value.hpp"
 #include "cintelhex/cintelhex.h"
 
+constexpr char MainWindow::GUI_NODE_NAME_PREFIX[];
+constexpr char MainWindow::PHOENIX_NODE_PREFIX[];
+constexpr char MainWindow::SETTINGS_ORGANIZATION[];
+constexpr char MainWindow::SETTINGS_APPLICATION[];
+
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
     // UIを生成する
     _Ui = new Ui_MainWindow;
@@ -293,7 +298,7 @@ void MainWindow::connectToNodes(const QString &namespace_name) {
                     stream << msg->gyroscope[2] << sep;
                     stream << dc48v_voltage << sep;
                     stream << battery_voltage << sep;
-                    stream << battery_current << Qt::endl;
+                    stream << battery_current << endl;
                     _LogFrameNumber++;
                 }
             });
@@ -531,7 +536,7 @@ void MainWindow::quitNodeThread(void) {
         // deleteはdeleteLater()スロットにより行われるのでここでする必要はない
         _NodeThread->requestInterruption();
         _NodeThread->quit();
-        _NodeThread->wait(std::chrono::milliseconds(NodeThread::QUIT_TIMEOUT));
+        _NodeThread->wait(std::chrono::milliseconds(NodeThread::QUIT_TIMEOUT).count());
         _NodeThread = nullptr;
     }
 }
@@ -657,6 +662,6 @@ std::shared_ptr<rclcpp::Node> MainWindow::createNode(void) {
 void MainWindow::quitGamepadThread(void) {
     _GamepadThread->requestInterruption();
     _GamepadThread->quit();
-    _GamepadThread->wait(std::chrono::milliseconds(NodeThread::QUIT_TIMEOUT));
+    _GamepadThread->wait(std::chrono::milliseconds(NodeThread::QUIT_TIMEOUT).count());
     _GamepadThread = nullptr;
 }

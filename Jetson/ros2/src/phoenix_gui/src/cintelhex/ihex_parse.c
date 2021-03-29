@@ -79,7 +79,7 @@ ihex_recordset_t* ihex_rs_from_file(const char* filename)
 #if defined(_MSC_VER)
 	_sopen_s(&fd, filename, O_RDONLY | O_BINARY, _SH_DENYWR, _S_IREAD);
 #else
-	fd = open_s(filename, O_RDONLY | O_BINARY);
+	fd = open(filename, O_RDONLY | O_BINARY);
 #endif
 	if (fd < 0)
 	{
