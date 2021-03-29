@@ -13,7 +13,6 @@
 #include <phoenix_msgs/msg/stream_data_adc2.hpp>
 #include <phoenix_msgs/msg/stream_data_status.hpp>
 #include <phoenix_msgs/msg/stream_data_motion.hpp>
-#include <phoenix_msgs/msg/stream_data_control.hpp>
 #include "../include/phoenix/stream_data.hpp"
 #include "../include/phoenix/status_flags.hpp"
 
@@ -52,7 +51,7 @@ public:
         _StatusPublisher = this->create_publisher<phoenix_msgs::msg::StreamDataStatus>("phoenix_status", qos);
         _Adc2Publisher = this->create_publisher<phoenix_msgs::msg::StreamDataAdc2>("phoenix_adc2", qos);
         _MotionPublisher = this->create_publisher<phoenix_msgs::msg::StreamDataMotion>("phoenix_motion", qos);
-        _ControlPublisher = this->create_publisher<phoenix_msgs::msg::StreamDataControl>("phoenix_control", qos);
+        _MotionPublisher = this->create_publisher<phoenix_msgs::msg::StreamDataMotion>("phoenix_control", qos);
         _ImuPublisher = this->create_publisher<sensor_msgs::msg::Imu>("phoenix_imu", qos);
 
         // スレッドを起動する
@@ -161,18 +160,6 @@ private:
             }
             break;
 
-        case StreamIdControl:
-            if (payload.size() == sizeof(StreamDataControl_t)) {
-                _QueueMutex.lock();
-                if (QUEUE_LENGTH <= _ControlQueue.size()) {
-                    _ControlQueue.pop();
-                }
-                _ControlQueue.push(*reinterpret_cast<const StreamDataControl_t *>(payload.data()));
-                _QueueMutex.unlock();
-                _ConditionVariable.notify_one();
-            }
-            break;
-
         default:
             break;
         }
@@ -239,20 +226,20 @@ private:
                 }
                 lock.lock();
             }
-            if (!_ControlQueue.empty()) {
-                // StreamDataControl_tをコピーする
-                std::array<phoenix_msgs::msg::StreamDataControl, QUEUE_LENGTH> buffer;
+            if (!_MotionQueue.empty()) {
+                // StreamDataMotion_tをコピーする
+                std::array<phoenix_msgs::msg::StreamDataMotion, QUEUE_LENGTH> buffer;
                 int count = 0;
                 do {
-                    ConvertControl(_ControlQueue.front(), &buffer[count]);
+                    ConvertMotion(_MotionQueue.front(), &buffer[count]);
                     count++;
-                    _ControlQueue.pop();
-                } while (!_ControlQueue.empty());
+                    _MotionQueue.pop();
+                } while (!_MotionQueue.empty());
 
-                // StreamDataControlを配信する
+                // StreamDataMotionを配信する
                 lock.unlock();
                 for (int index = 0; index < count; index++) {
-                    _ControlPublisher->publish(buffer[index]);
+                    _MotionPublisher->publish(buffer[index]);
                 }
                 lock.lock();
             }
@@ -321,9 +308,9 @@ private:
             motion->gyroscope[axis] = data.gyroscope[axis];
         }
         for (int index = 0; index < 4; index++) {
-            motion->wheel_velocity[index] = data.wheel_velocity[index];
-            motion->wheel_current_d[index] = data.wheel_current_d[index];
-            motion->wheel_current_q[index] = data.wheel_current_q[index];
+            motion->wheel_velocity_meas[index] = data.wheel_velocity_meas[index];
+            motion->wheel_current_meas_d[index] = data.wheel_current_meas_d[index];
+            motion->wheel_current_meas_q[index] = data.wheel_current_meas_q[index];
         }
 
         // IMU測定値をImuメッセージに変換する
@@ -337,9 +324,9 @@ private:
     }
 
     /**
-     * StreamDataControl_tをROS2メッセージに変換する
+     * StreamDataMotion_tをROS2メッセージに変換する
      */
-    void ConvertControl(const StreamDataControl_t &data, phoenix_msgs::msg::StreamDataControl *msg) {
+    void ConvertMotion(const StreamDataMotion_t &data, phoenix_msgs::msg::StreamDataMotion *msg) {
         msg->performance_counter = data.performance_counter;
         for (int index = 0; index < 4; index++) {
             msg->wheel_velocity_ref[index] = data.wheel_velocity_ref[index];
@@ -378,9 +365,6 @@ private:
     /// StreamDataMotion_tを格納するキュー
     std::queue<StreamDataMotion_t> _MotionQueue;
 
-    /// StreamDataControl_tを格納するキュー
-    std::queue<StreamDataControl_t> _ControlQueue;
-
     /// StreamDataStatus(FPGA内のNios IIのCentralizedMonitorのステータスフラグ)を配信するpublisher
     rclcpp::Publisher<phoenix_msgs::msg::StreamDataStatus>::SharedPtr _StatusPublisher;
 
@@ -389,9 +373,6 @@ private:
 
     /// StreamDataMotion(IMUやセンサーの情報)を配信するpublisher
     rclcpp::Publisher<phoenix_msgs::msg::StreamDataMotion>::SharedPtr _MotionPublisher;
-
-    /// StreamDataControl(モーター制御の情報)を配信するpublisher
-    rclcpp::Publisher<phoenix_msgs::msg::StreamDataControl>::SharedPtr _ControlPublisher;
 
     /// IMUの測定値を配信するpublisher
     rclcpp::Publisher<sensor_msgs::msg::Imu>::SharedPtr _ImuPublisher;
