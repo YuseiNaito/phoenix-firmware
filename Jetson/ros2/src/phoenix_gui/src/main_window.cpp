@@ -2,7 +2,6 @@
 #include "ui_main_window.h"
 #include <QtCore/QDebug>
 #include <QtCore/QTimer>
-#include <QtCore/QRandomGenerator>
 #include <QtGui/QCloseEvent>
 #include <QtWidgets/QFileDialog>
 #include <QtWidgets/QMessageBox>
@@ -11,6 +10,8 @@
 #include <QtWidgets/QGestureEvent>
 #include <chrono>
 #include <algorithm>
+#include <fstream>
+#include <random>
 #include "format_value.hpp"
 #include "cintelhex/cintelhex.h"
 
@@ -654,7 +655,11 @@ void MainWindow::programFpga(void) {
 std::shared_ptr<rclcpp::Node> MainWindow::createNode(void) {
     // ノードを作成する
     // ノード名の被りを防止するため末尾に乱数を付与する
-    QString node_name = QString("%1%2").arg(GUI_NODE_NAME_PREFIX).arg(QRandomGenerator::global()->generate(), 8, 16, QLatin1Char('0'));
+    std::random_device seed_gen;
+    std::mt19937 engine(seed_gen());
+    std::uniform_real_distribution<> dist(0, 100);
+
+    QString node_name = QString("%1%2").arg(GUI_NODE_NAME_PREFIX).arg(static_cast<int>(dist(engine)), 8, 16, QLatin1Char('0'));
     QString namespace_name = QSysInfo::machineHostName();
     return std::make_shared<rclcpp::Node>(node_name.toStdString(), namespace_name.toStdString());
 }
