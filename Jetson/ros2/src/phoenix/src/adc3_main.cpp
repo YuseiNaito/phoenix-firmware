@@ -27,14 +27,14 @@ public:
         std::shared_ptr<I2c> i2c(new I2c);
         if (i2c->Open(phoenix::I2cDeviceName) == false) {
             fprintf(stderr, "Cannot open '%s'.\n", I2cDeviceName);
-            throw;
+            //throw;
         }
 
         // ADC3(ADS1015)を見つける
         _Adc3 = std::shared_ptr<ADS1015>(new ADS1015(i2c, phoenix::Ads1015Address));
         if (_Adc3->Initialize() == false) {
             fprintf(stderr, "ADS1015 is not found.\n");
-            throw;
+            //throw;
         }
 
         // publisherを作成する

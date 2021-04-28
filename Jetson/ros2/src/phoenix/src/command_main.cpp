@@ -169,12 +169,15 @@ private:
         _SharedMemory.HeadChecksum = checksum;
         _SharedMemory.TailChecksum = checksum;
 
+
+        response->succeeded = true;
+/*
         // パラメータと前後のチェックサムを書き込む
         response->succeeded = _AvalonMm->Write(
             NIOS_SHARED_RAM_BASE + static_cast<uint32_t>(offsetof(SharedMemory_t, HeadChecksum)),
             &_SharedMemory.HeadChecksum,
             sizeof(SharedMemory_t::Parameters_t) + sizeof(uint32_t) * 2);
-    }
+ */   }
 
     /**
      * ProgramNiosサービスを処理する
