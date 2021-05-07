@@ -53,8 +53,8 @@ void ImageViewerWidget::initializeGL(void) {
 
 void ImageViewerWidget::resizeGL(int width, int height) {
     glViewport(0, 0, width, height);
-    glLoadIdentity();
-    glOrtho(-1.0, 1.0, -1.0, 1.0, -1.0, 1.0);
+    //glLoadIdentity();
+    //glOrtho(-1.0, 1.0, -1.0, 1.0, -1.0, 1.0);
 }
 
 void ImageViewerWidget::paintGL(void) {
@@ -125,6 +125,7 @@ void ImageViewerWidget::paintGL(void) {
     // 表示画像があれば描画する
     glClear(GL_COLOR_BUFFER_BIT);
     if (m_Texture != nullptr) {
+	/*
         // アスペクト比を調整する
         double normalized_width, normalized_height;
         double ratio_image = static_cast<double>(image->width) / static_cast<double>(image->height);
@@ -159,6 +160,7 @@ void ImageViewerWidget::paintGL(void) {
         glVertex3d(-normalized_width, normalized_height, 0.0);
         glEnd();
         glDisable(GL_TEXTURE_2D);
+	*/
     }
 }
 

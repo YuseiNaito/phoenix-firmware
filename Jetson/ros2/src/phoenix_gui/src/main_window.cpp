@@ -660,7 +660,7 @@ std::shared_ptr<rclcpp::Node> MainWindow::createNode(void) {
     std::uniform_real_distribution<> dist(0, 100);
 
     QString node_name = QString("%1%2").arg(GUI_NODE_NAME_PREFIX).arg(static_cast<int>(dist(engine)), 8, 16, QLatin1Char('0'));
-    QString namespace_name = QSysInfo::machineHostName();
+    QString namespace_name = "kiks1_desktop";//QSysInfo::machineHostName();
     return std::make_shared<rclcpp::Node>(node_name.toStdString(), namespace_name.toStdString());
 }
 
