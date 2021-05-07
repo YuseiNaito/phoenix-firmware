@@ -40,10 +40,11 @@ int main(int argc, char * argv[]){
   rclcpp::init(argc, argv);
   auto node = rclcpp::Node::make_shared("udp_receiver");
 //サービスクライアントの作成をする
-  auto client = node -> create_client<SetSpeed_>("/jetson_desktop/set_speed");
+  auto client = node->create_client<SetSpeed_>("/kiks1_desktop/set_speed");
 
 //サービスをまつ
   while (!client->wait_for_service(1s)) {
+    // client.reset();
     //シャットダウンされたかの確認
     if(!rclcpp::ok()){
       RCLCPP_ERROR(node->get_logger(),"待ってる間に切れました");
@@ -53,7 +54,7 @@ int main(int argc, char * argv[]){
     RCLCPP_INFO(node->get_logger(),"サービス待ち");
   }
   
-RCLCPP_INFO(node->get_logger(),"成功");
+  RCLCPP_INFO(node->get_logger(),"成功");
   auto request = std::make_shared<SetSpeed_::Request>();
   
 
@@ -62,7 +63,7 @@ RCLCPP_INFO(node->get_logger(),"成功");
     return -1;
   }*/
 
-  const int my_id = 1;//atoi(argv[1]);
+  const int my_id = 7;//atoi(argv[1]);
 
   // 初期設定およびオブジェクトの生成
   // TODO: Kicker 向けの初期設定およびオブジェクトの生成
@@ -83,10 +84,10 @@ RCLCPP_INFO(node->get_logger(),"成功");
     char recv_buf[recv_buf_size];
     int recv_result = udp0.receive(recv_buf, recv_buf_size);
 
+    // if (recv_result > 0) std::cout << get_id(recv_buf) << std::endl;
     // 受信した場合、受信データのロボットIDと自身のIDを比較し、
     // 同一だったときFPGAおよびKickerへの送信データの更新を行う
     if (recv_result > 0 && get_id(recv_buf) == my_id) {
-
       // タイムアウト検知用変数の更新
       time_last_recv = std::chrono::system_clock::now();
 
@@ -100,37 +101,32 @@ RCLCPP_INFO(node->get_logger(),"成功");
       speed_w = ((recv_buf[0] & 0x80) == 0 ? 1 : -1) *
                 (recv_buf[5] << 8 | recv_buf[6]) * 8 / 1000;
       dribble = recv_buf[7] & 0x0f;
-    /*
-    std::cout<<"x="<<speed_x<<std::endl;
-    std::cout<<"y="<<speed_y<<std::endl;
-    std::cout<<"w="<<speed_w<<std::endl;
-    */
+      
+      /*
+      std::cout << "x=" << speed_x << std::endl;
+      std::cout << "y=" << speed_y << std::endl;
+      std::cout << "w=" << speed_w << std::endl;
+      */
+      
+      //リクエストに値をいれる
+      request->speed_x = 0.001 * speed_x;
+      request->speed_y = 0.001 * speed_y;
+      request->speed_omega =  speed_w * 3.1415926 / 180.0;
+      request->dribble_power = dribble;
+
+      //サーバーにリクエストを送る非同期で
+      auto result = client->async_send_request(request);
+      // result.wait();
+
+      //結果待ち
+      if (rclcpp::spin_until_future_complete(node, result) ==
+		      rclcpp::executor::FutureReturnCode::SUCCESS) {
+	 //     RCLCPP_INFO(node->get_logger(), "Receive : '%s'", result.get()->succeeded);
+      } else {
+	      RCLCPP_ERROR(node->get_logger(), "Problem while waiting for response.");
+      }
     }
-
-    //リクエストに値をいれる
-    request->speed_x = speed_x;
-    
-    request->speed_y = speed_y;
-    request->speed_omega = speed_w;
-    request->dribble_power = dribble;
-
-    //サーバーにリクエストを送る非同期で
-    auto result = client->async_send_request(request);
-  
-    //結果待ち
-    if (rclcpp::spin_until_future_complete(node, result) ==
-    rclcpp::executor::FutureReturnCode::SUCCESS)
-    {
-      RCLCPP_INFO(node->get_logger(), "Receive : '%s'", result.get()->succeeded);
-    } else {
-      RCLCPP_ERROR(node->get_logger(), "Problem while waiting for response.");
-    }
-
-    // 一定時間スリープ
-    std::this_thread::sleep_for(time_sleep);
-  
   }
   
-
   return 0;
 }
